@@ -7,8 +7,9 @@ deadline: 19.12.2018
   
 - Dataset: https://challenge2018.isic-archive.com/task3/
 - Features: Color, Shape, Texture
-- Classes:  - Binary: malignant/benign  
-            - Multiclass: nevus, dermatofibroma, malanoma, pigmented bowen's, pigmented benign keratoses, basal cell carcinoma, vascular  
+- Classes:  
+  - Binary: malignant/benign  
+  - Multiclass: nevus, dermatofibroma, malanoma, pigmented bowen's, pigmented benign keratoses, basal cell carcinoma, vascular  
 - Model: Decision-Tree (ID3, C4.5)  
   
 files:  - main.py
