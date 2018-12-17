@@ -1,55 +1,37 @@
 # -*- coding: utf-8 -*-
 """
-Pytorch MNIST example
+ISM Project Part 1: main.py
 
-Created on Sun Dez 2 01:23:34 2018
+Created on Sun Dez 2 17:23:34 2018
 
 @author: Sabljak
 """
-
-import numpy as np
-import pandas as pd
-from PIL import Image, ImageOps
-from skimage import io, exposure
-from matplotlib import pyplot as plt
 from features import *
+from model import *
 
-#############################################
-# Parameters                                #
-#############################################
 im_path = 'data/HAM10000/'
-
-# load images
-def load_data():
-    images = []
-    labels = []
-
-    # open .csv file with image names and labels
-    infos = pd.read_csv(im_path + 'labels.csv').sort_values('image_id')
-    # image names
-    im_ids = infos.image_id
-    # number of images
-    im_num = im_ids.size
-
-    # open images, equalize histogram, then save to list of numpy arrays
-    for i in range(0, im_num):
-        im = Image.open(im_path + im_ids[i] + '.jpg')
-        im.load()
-
-        im_hist = ImageOps.equalize(im)
-        # append to list
-        images.append(np.asanyarray(im_hist))
-
-    # get labels
-    labels = infos.dx
-
-    return infos, images, labels
+data_path = 'data/data.csv'
+feature_path = 'data/features.csv'
 
 
 if __name__ == '__main__':
-    info, images, labels = load_data()
+    f = Features(im_path, data_path, feature_path)
+    f.load_data()
 
-    # it will take forever to calculate the moments
-    # I calculate them for all images and provide them in a csv file
-    legendre_moments(info, images)
+    # feature extraction
+    # f.legendre_moments()
+    # f.legendre_moments_bw()
+    # f.textures()
+    # f.avr_colour()
+
+    # feature selection
+    f.feature_selection()
+
+    # model: 'svc', 'decision tree', 'ada-boost', 'gaussian'
+    m = Model(f, 'svc')
+    m.train()
+    m.predict()
+    m.eval()
+
+
 
