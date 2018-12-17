@@ -10,8 +10,8 @@ from features import *
 from model import *
 
 im_path = 'data/HAM10000/'
-data_path = 'data/data.csv'
-feature_path = 'data/features.csv'
+data_path = 'data/HAM10000/data.csv'
+feature_path = 'data/features_41.csv'
 
 
 if __name__ == '__main__':

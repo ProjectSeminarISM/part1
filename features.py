@@ -48,7 +48,8 @@ class Features:
                 # append to list
                 self.img.append(np.asarray(im_hist))
 
-            self.features = self.data.drop(['lesion_id', 'image_id', 'dx', 'dx_type'], axis=1)
+            self.features = self.data.drop(['lesion_id', 'image_id', 'dx', 'dx_type', 'age', 'sex', 'localization'],
+                                           axis=1)
         else:
             self.features = pd.read_csv(self.feature_path)
 
@@ -149,14 +150,14 @@ class Features:
             self.features.loc[self.data['image_id'] == im_id, ['average_green']] = average[1]
             self.features.loc[self.data['image_id'] == im_id, ['average_blue']] = average[2]
 
+    """histogram of oriented gradients"""
+    def histograds(self):
+        hog = []
+        for i in range(0, self.data.shape[0]):
+            hog.append(feature.hog(color.rgb2grey(self.img[i])), block_norm='L2-Hys')
+
     """features selection"""
     def feature_selection(self):
-        # factorize categorical features
-        # TODO: decide whether sex and localization is treated as feature since in predicting new examples there
-        #  will be no such information
-        # self.features['sex'] = pd.factorize(self.features['sex'])[0].astype('float64')
-        # self.features['localization'] = pd.factorize(self.features['localization'])[0].astype('float64')
-        self.features.drop(['age', 'sex', 'localization'], axis=1, inplace=True)
 
         # select training and validation set
         dev_im_id = pd.read_csv('data/val_split_info.csv')
@@ -183,6 +184,7 @@ class Features:
 
         # first method: select k=10 best features with chi2-test
         # problem: choose of k beforehand
+        """
         chi_selector = SelectKBest(chi2, k=10).fit(features_norm, self.classes)
         chi_support = chi_selector.get_support()
         chi_feature_names = self.features.loc[:, chi_support].columns.tolist()
@@ -190,6 +192,7 @@ class Features:
         chi_features = chi_selector.transform(features_norm)
         print(chi_features.shape[1], 'selected features')
         print(chi_feature_names)
+        """
 
         # other method: (L1)/L2-based feature selection with LinearSVC
         # use SVM as a sparse estimator to reduce dimensionality

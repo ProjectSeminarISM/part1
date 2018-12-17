@@ -26,13 +26,13 @@ class Model:
         self.classifier = None
 
         if classifier == 'decision tree':
-            self.classifier = DecisionTreeClassifier()
+            self.classifier = DecisionTreeClassifier(max_features=7)
         elif classifier == 'ada-boost':
-            self.classifier = AdaBoostClassifier()
+            self.classifier = AdaBoostClassifier(n_estimators=7)
         elif classifier == 'gaussian':
             self.classifier = GaussianNB()
         elif classifier == 'svc':
-            self.classifier = SVC(gamma=2, C=0.1, class_weight='balanced', probability=True)
+            self.classifier = SVC(gamma='auto', C=1, class_weight='balanced', probability=True)
         else:
             print('no such classifier. Possible classifiers: "decision tree", "ada-boost", "gaussian", "svc"')
             self.classifier = DecisionTreeClassifier()
