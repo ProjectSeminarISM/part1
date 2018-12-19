@@ -185,13 +185,12 @@ class Features:
         # first method: select k=10 best features with chi2-test
         # problem: choose of k beforehand
         """
-        chi_selector = SelectKBest(chi2, k=10).fit(features_norm, self.classes)
+        chi_selector = SelectKBest(chi2, k=15).fit(features_norm, self.classes)
         chi_support = chi_selector.get_support()
         chi_feature_names = self.features.loc[:, chi_support].columns.tolist()
         chi_drop_names = self.features.loc[:, chi_support].columns.tolist()
         chi_features = chi_selector.transform(features_norm)
-        print(chi_features.shape[1], 'selected features')
-        print(chi_feature_names)
+        print(chi_features.shape[1], 'chi-selected features', chi_feature_names)
         """
 
         # other method: (L1)/L2-based feature selection with LinearSVC
@@ -204,13 +203,16 @@ class Features:
         svc_feature_names = self.features.loc[:, svc_support].columns.tolist()
         svc_drop_names = self.features.loc[:, ~svc_support].columns.tolist()
         svc_features = svc_selector.transform(features_norm)
-        print(svc_features.shape[1], ' selected features')
-        print(svc_feature_names)
+        print(svc_features.shape[1], 'svc-selected features: ', svc_feature_names)
 
         # according to what features to use, set self variables; here: scv_features
+
         self.features = svc_features
         self.train_features.drop(svc_drop_names, axis=1, inplace=True)
         self.train_features = MinMaxScaler().fit_transform(self.train_features)
         self.dev_features.drop(svc_drop_names, axis=1, inplace=True)
         self.dev_features = MinMaxScaler().fit_transform(self.dev_features)
         self.feature_names = svc_feature_names
+
+        # self.train_features = MinMaxScaler().fit_transform(self.train_features)
+        # self.dev_features = MinMaxScaler().fit_transform(self.dev_features)

@@ -9,8 +9,9 @@ Created on Sun Dez 16 11:10:27 2018
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.naive_bayes import GaussianNB
-from sklearn.svm import SVC
+from sklearn.svm import SVC, NuSVC
 from sklearn.metrics import classification_report, confusion_matrix
+import pandas as pd
 import graphviz
 
 
@@ -18,11 +19,14 @@ class Model:
 
     """models selection, training, prediction and evaluation"""
     def __init__(self, f, classifier):
+        self.data = f.data
         self.train_features = f.train_features
         self.train_classes = f.train_classes
         self.dev_features = f.dev_features
         self.dev_classes = f.dev_classes
         self.pred_classes = []
+        self.prob_classes = []
+        self.prob_table = []
         self.classifier = None
 
         if classifier == 'decision tree':
@@ -32,7 +36,8 @@ class Model:
         elif classifier == 'gaussian':
             self.classifier = GaussianNB()
         elif classifier == 'svc':
-            self.classifier = SVC(gamma='auto', C=1, class_weight='balanced', probability=True)
+            # self.classifier = SVC(gamma='auto', C=10, class_weight='balanced', probability=True)
+            self.classifier = SVC(gamma='auto', C=30, class_weight='balanced', probability=True)
         else:
             print('no such classifier. Possible classifiers: "decision tree", "ada-boost", "gaussian", "svc"')
             self.classifier = DecisionTreeClassifier()
@@ -53,8 +58,16 @@ class Model:
 
     def predict(self):
         self.pred_classes = self.classifier.predict(self.dev_features)
+        self.prob_classes = self.classifier.predict_proba(self.dev_features)
 
     def eval(self):
         # print(confusion_matrix(self.dev_classes, self.pred_classes))
+        self.prob_table = pd.DataFrame(self.classifier.predict_proba(self.dev_features), columns=self.classifier.classes_)
+        self.prob_table['image'] = pd.read_csv('data/val_split_info.csv')
+        self.prob_table = self.prob_table[['image', 'mel', 'nv', 'bcc', 'akiec', 'bkl', 'df', 'vasc']]
+        self.prob_table.to_csv('data/prob_table.csv', index=False)
+        print(self.prob_table.head())
         print(classification_report(self.dev_classes, self.pred_classes))
+
+
 
