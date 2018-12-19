@@ -10,7 +10,7 @@ import numpy as np
 from PIL import Image, ImageOps
 import pandas as pd
 from skimage import feature, img_as_ubyte, color
-from sklearn.feature_selection import SelectKBest, chi2
+# from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.svm import LinearSVC
 from sklearn.feature_selection import SelectFromModel
@@ -19,10 +19,11 @@ from sklearn.feature_selection import SelectFromModel
 class Features:
 
     """Feature Extraction, Selection and Preparation"""
-    def __init__(self, im_path, data_path, feature_path=None):
+    def __init__(self, im_path, data_path, dev_set_path, feature_path=None):
         self.im_path = im_path
         self.data_path = data_path
         self.feature_path = feature_path
+        self.dev_set_path = dev_set_path
         self.img = []
         self.data = []
         self.class_names = ['mel', 'nv', 'bcc', 'akiec', 'bkl', 'df', 'vasc']
@@ -105,7 +106,8 @@ class Features:
             im_id = self.data['image_id'][i]
             for p in range(3):
                 for q in range(3):
-                    self.features.loc[self.data['image_id'] == im_id, ['Moment_L{0}{1}'.format(p, q)]] = legendre_moment(color.rgb2grey(img[i]), p, q)
+                    self.features.loc[self.data['image_id'] == im_id, ['Moment_L{0}{1}'.format(p, q)]] = \
+                        self.legendre_moment(color.rgb2grey(self.img[i]), p, q)
             print(self.features.loc[self.data['image_id'] == im_id, 'image_id'])
             # self.features.to_csv('features.csv', index=False)
 
@@ -120,19 +122,20 @@ class Features:
         for i in range(0, self.data.shape[0]):
             im_id = self.data['image_id'][i]
 
-            gCoMat = feature.greycomatrix(img_as_ubyte(color.rgb2grey(self.img[i])), [2], [0], 256, symmetric=True,
-                                          normed=True)
+            grey_co_mat = feature.greycomatrix(img_as_ubyte(color.rgb2grey(self.img[i])), [2], [0], 256, symmetric=True,
+                                               normed=True)
 
             self.features.loc[self.data['image_id'] == im_id, ['contrast']] = \
-                feature.greycoprops(gCoMat, prop='contrast')
+                feature.greycoprops(grey_co_mat, prop='contrast')
             self.features.loc[self.data['image_id'] == im_id, ['dissimilarity']] = \
-                feature.greycoprops(gCoMat, prop='dissimilarity')
+                feature.greycoprops(grey_co_mat, prop='dissimilarity')
             self.features.loc[self.data['image_id'] == im_id, ['homogeneity']] = \
-                feature.greycoprops(gCoMat, prop='homogeneity')
+                feature.greycoprops(grey_co_mat, prop='homogeneity')
             self.features.loc[self.data['image_id'] == im_id, ['energy']] = \
-                feature.greycoprops(gCoMat, prop='energy')
+                feature.greycoprops(grey_co_mat, prop='energy')
             self.features.loc[self.data['image_id'] == im_id, ['correlation']] = \
-                feature.greycoprops(gCoMat, prop='correlation')
+                feature.greycoprops(grey_co_mat, prop='correlation')
+        # self.features.to_csv('features.csv', index=False)
 
     """average colour"""
     def avr_colour(self):
@@ -149,9 +152,10 @@ class Features:
             self.features.loc[self.data['image_id'] == im_id, ['average_red']] = average[0]
             self.features.loc[self.data['image_id'] == im_id, ['average_green']] = average[1]
             self.features.loc[self.data['image_id'] == im_id, ['average_blue']] = average[2]
+        # self.features.to_csv('features.csv', index=False)
 
     """histogram of oriented gradients"""
-    def histograds(self):
+    def hist_grad(self):
         hog = []
         for i in range(0, self.data.shape[0]):
             hog.append(feature.hog(color.rgb2grey(self.img[i])), block_norm='L2-Hys')
@@ -160,7 +164,7 @@ class Features:
     def feature_selection(self):
 
         # select training and validation set
-        dev_im_id = pd.read_csv('data/val_split_info.csv')
+        dev_im_id = pd.read_csv(self.dev_set_path)
         dev_indices = self.data.image_id.isin(dev_im_id.image)[lambda x: x]
         train_indices = self.data.image_id.isin(dev_im_id.image)[lambda x: ~x]
         self.train_features = self.features.drop(dev_indices.index)
@@ -206,13 +210,9 @@ class Features:
         print(svc_features.shape[1], 'svc-selected features: ', svc_feature_names)
 
         # according to what features to use, set self variables; here: scv_features
-
         self.features = svc_features
         self.train_features.drop(svc_drop_names, axis=1, inplace=True)
         self.train_features = MinMaxScaler().fit_transform(self.train_features)
         self.dev_features.drop(svc_drop_names, axis=1, inplace=True)
         self.dev_features = MinMaxScaler().fit_transform(self.dev_features)
         self.feature_names = svc_feature_names
-
-        # self.train_features = MinMaxScaler().fit_transform(self.train_features)
-        # self.dev_features = MinMaxScaler().fit_transform(self.dev_features)

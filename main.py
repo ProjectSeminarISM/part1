@@ -12,10 +12,12 @@ from model import *
 im_path = 'data/HAM10000/'
 data_path = 'data/HAM10000/data.csv'
 feature_path = 'data/features_41.csv'
+dev_set_path = 'data/val_split_info.csv'
 
 
 if __name__ == '__main__':
-    f = Features(im_path, data_path, feature_path)
+
+    f = Features(im_path, data_path, dev_set_path, feature_path)
     f.load_data()
 
     # feature extraction
@@ -24,11 +26,11 @@ if __name__ == '__main__':
     # f.textures()
     # f.avr_colour()
 
-    # feature selection
     f.feature_selection()
 
-    # model: 'svc', 'decision tree', 'ada-boost', 'gaussian'
+    # model selection: 'svc', 'decision tree', 'ada-boost', 'gaussian'
     m = Model(f, 'svc')
+
     m.train()
     m.predict()
     m.eval()
